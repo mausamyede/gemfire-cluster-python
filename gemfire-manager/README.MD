@@ -8,9 +8,6 @@ Each managed host must meet the following prerequisites:
 * A JDK
 * A GemFire Installation
 * Python 2.6+
-* the "netifaces" python package.  This usually can be installed as follows:
-`pip install netifaces`.  
-
 
 #Local Cluster Walk Through#
 
@@ -23,7 +20,7 @@ you may do so by modifying the _cluster-home_ setting in _cluster.json_.
 ```
     python cluster.py start
 ```
-5. Verify the cluster is running by accessing pulse at: http://localhost:17070/pulse
+5. Verify the cluster is running by accessing pulse at: http://localhost:10070/pulse
 6. Note: the locator is listening on port 10000, the jmx-manager is on port 11099
 7. Check the status of a member:
 ```
@@ -33,8 +30,8 @@ Note that the member name is determined by its key in the _processes_ dictionary
 under each host.
 8. stop and start a member
 ```
-    python cluster.py stop server2
-    python cluster.py start server2
+    python cluster.py stop datanode1
+    python cluster.py start datanode1
 ```
 9. stop the whole cluster
 ```
@@ -43,7 +40,7 @@ under each host.
 Note that this does not stop locators.
 10. stop the locator
 ```
-    python cluster.py stop locator
+    python cluster.py stop locator1
 ```
     
     
@@ -88,7 +85,6 @@ figure out which settings need to be passed as _--J=-Dgemfire.setting_ and which
 are passed directly to gfsh as _--setting_.
 * Place JVM gc options, arbitrary -Ds and other settings unrelated to gemfire in
 the _jvm-options_ setting, wich is a list.
-* _bind-address_ can be an interface name, for example "eth0".
 * for remote clusters, each host has an "ssh" object which specifies all of
 the information needed to connect to that host.
 

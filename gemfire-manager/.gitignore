@@ -1,5 +1,6 @@
-cluster.json
 *.log
 *.pyc
 **/.DS_Store
+datanode*
+locator*
 

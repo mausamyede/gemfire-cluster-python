@@ -1,6 +1,3 @@
-#
-# Copyright (c) 2015-2016 Pivotal Software, Inc. All Rights Reserved.
-#
 import gemprops
 import netifaces
 import os
@@ -27,8 +24,7 @@ class ClusterDef:
         return False
 
     
-    # if addr does not contain a "." it will be treated as a network interface
-    # name and translated into an ip address using the netifaces package
+
     def translateBindAddress(self,addr):
         if not '.' in addr:
             if addr in netifaces.interfaces():
@@ -53,8 +49,6 @@ class ClusterDef:
         return result
         
 
-    # raises an exception if a process with the given name is not defined for
-    # this host
     def processProps(self, processName, host=None):
         processes = None
         if host is None:
@@ -73,9 +67,7 @@ class ClusterDef:
                     
         return processes[processName]
 
-    
-    #host props are optional - if they are not defined in the file an empty
-    #dictionary will be returned
+
     def hostProps(self, host = None):
         result = dict()
         
@@ -92,15 +84,13 @@ class ClusterDef:
         
         return result
         
-    #scope can be locator-properties, datanode-properties or global-properties
-    #all are optional
+
     def props(self, scope):
         if scope in self.clusterDef:
             return self.clusterDef[scope]
         else:
             return dict()    
 
-    # this is the main method for accessing properties  
     def processProperty(self, processType, processName, propertyName, host = None):
         pProps = self.processProps(processName, host = host)
         if propertyName in pProps:
@@ -121,8 +111,7 @@ class ClusterDef:
             raise Exception('property not found: ' + propertyName)
 
 
-    # this method assumes that it is not passed handled props or
-    # jvm props
+
     def gfshArg(self, key, val):
         if self.isBindAddressProperty(key):
             val = self.translateBindAddress(val)
@@ -153,7 +142,6 @@ class ClusterDef:
             
         return result
 
-# public interface
 
     def locatorsOnThisHost(self):
         return self.processesOnThisHost('locator')
@@ -171,8 +159,7 @@ class ClusterDef:
         return self.isProcessOnThisHost(processName, 'datanode')
 
 
-    #TODO it should not be necessary to pass the host in any case becaus the
-    #     processName implies the host
+
     def locatorProperty(self, processName, propertyName, host=None):
         result = self.processProperty('locator',processName, propertyName, host = host)
         if self.isBindAddressProperty(propertyName):
@@ -180,9 +167,7 @@ class ClusterDef:
         else:
             return result
 
-        
-    #TODO it should not be necessary to pass the host in any case becaus the
-    #     processName implies the host
+
     def datanodeProperty(self, processName, propertyName, host=None):
         result = self.processProperty('datanode',processName, propertyName, host = host)
         if self.isBindAddressProperty(propertyName):
@@ -190,8 +175,7 @@ class ClusterDef:
         else:
             return result
         
-    #TODO it should not be necessary to pass the host in any case becaus the
-    #     processName implies the host
+
     def hasDatanodeProperty(self, processName, propertyName, host = None):
         pProps = self.processProps(processName, host = host)
         if propertyName in pProps:
@@ -211,10 +195,7 @@ class ClusterDef:
         else:
             return False
 
-    #TODO - extract bits common to this and hasDatanodeProperty and
-    # put in shared function
-    #TODO it should not be necessary to pass the host in any case becaus the
-    #     processName implies the host
+
     def hasLocatorProperty(self, processName, propertyName, host = None):
         pProps = self.processProps(processName, host = host)
         if propertyName in pProps:
@@ -238,9 +219,6 @@ class ClusterDef:
 
     def gfshArgs(self, processType, processName):
         temp = dict()
-        #note that order is important here - process specific properties
-        #override host properties override datanode/locator properties
-        #override global properties
         for source in [self.props('global-properties'),
                        self.props(processType + '-properties'),
                        self.hostProps(),
@@ -248,11 +226,8 @@ class ClusterDef:
             for k in source.keys():
                 temp[k] = source[k]
                 
-        #now post-process, removing the items that cannot be passed as
-        #-Ds and prefixing the remainders
         result = self.buildGfshArgs(temp)
         
-        # now directly add the contents of jvm-options' if present
         if 'jvm-options' in temp:
             for option in temp['jvm-options']:
                 result.append('--J={0}'.format(option))

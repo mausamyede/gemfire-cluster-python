@@ -1,11 +1,6 @@
-#
-# Copyright (c) 2015-2016 Pivotal Software, Inc. All Rights Reserved.
-#
-
 from __future__ import print_function
 import clusterdef
 import json
-#import netifaces
 import os
 import os.path
 import re
@@ -15,12 +10,10 @@ import sys
 import tempfile
 import copy
 
-
 LOCATOR_PID_FILE="cf.gf.locator.pid"
 SERVER_PID_FILE="vf.gf.server.pid"
 
 clusterDef = None
-
 
 def ensureDir(dname):
 	if not os.path.isdir(dname):
@@ -55,35 +48,30 @@ def pidIsAlive(pidfile):
 def serverIsRunning(processName):
 	try:
 		port = clusterDef.locatorProperty(processName, 'server-port')
-		bindAddress = clusterDef.translateBindAddress(clusterDef.datanodeProperty(processName, 'server-bind-address'))
 		
 		#leave the double parens in the line below!
-		sock = socket.create_connection((bindAddress, port))
+		sock = socket.create_connection(('localhost', port))
 		sock.close()
 		
 		return True
 	except Exception as x:
 		pass
-		# ok - probably not running
+
 		
-	# now check the pid file
 	pidfile = os.path.join(clusterDef.datanodeProperty(processName, 'cluster-home'), processName, SERVER_PID_FILE)
 	result = pidIsAlive(pidfile)	
 	return result
 	
 def locatorIsRunning(processName):
 	port = clusterDef.locatorProperty(processName, 'port')
-	bindAddress = clusterDef.translateBindAddress(clusterDef.locatorProperty(processName, 'bind-address'))
 	try:
 		#leave the double parens in the line below!
-		sock = socket.create_connection( (bindAddress, port))
+		sock = socket.create_connection( ('localhost', port))
 		sock.close()
 		return True
 	except Exception as x:
 		pass
-		# ok - probably not running
 		
-	# now check the pid file
 	pidfile = os.path.join(clusterDef.locatorProperty(processName, 'cluster-home'), processName, LOCATOR_PID_FILE)
 	
 	return pidIsAlive(pidfile)	
@@ -164,7 +152,6 @@ def startLocator(processName):
 		, "start", "locator"
 		,"--dir=" + locatorDir(processName)
 		,"--port={0}".format(clusterDef.locatorProperty(processName, 'port'))
-		,'--bind-address={0}'.format(clusterDef.locatorProperty(processName,'bind-address'))
 		,"--name={0}".format(processName)]
 	
 	#these are optional
@@ -189,19 +176,17 @@ def startServerCommandLine(processName):
 		, "start", "server"
 		,"--dir=" + datanodeDir(processName)
 		,"--name={0}".format(processName)
-		,"--server-bind-address={0}".format(clusterDef.datanodeProperty(processName,'server-bind-address'))
 		,"--server-port={0}".format(clusterDef.datanodeProperty(processName,'server-port'))
 		]
 	
-	#these are optional
+	
 	if clusterDef.hasDatanodeProperty(processName,'classpath'):
 		cmdLine.append('--classpath={0}'.format(clusterDef.datanodeProperty(processName, 'classpath')))
 		
 	if clusterDef.hasDatanodeProperty(processName,'spring-xml-location'):
 		cmdLine.append('--spring-xml-location={0}'.format(clusterDef.datanodeProperty(processName,'spring-xml-location')))
 	
-	#all the rest are passed through as -Ds. Those recognized as gemfire properties
-	#are prefixed with "gemfire."
+	
 	cmdLine[len(cmdLine):] = clusterDef.gfshArgs('datanode',processName)
 	
 	return cmdLine
@@ -234,7 +219,6 @@ def launchServerProcess(processName):
 def startServer(processName):
 	proc = launchServerProcess(processName)
 
-	#could be none if the server was really already running	
 	if proc is not None:
 		if proc.wait() != 0:
 			sys.exit("cache server process failed to start - see the logs in {0}".format(datanodeDir(processName)))
@@ -242,14 +226,12 @@ def startServer(processName):
 
 def startClusterLocal():
 	
-	# probably is only going to be one
 	for locator in clusterDef.locatorsOnThisHost():
 		startLocator(locator)
 		
 	procList = []
 	for dnode in clusterDef.datanodesOnThisHost():
 		proc = launchServerProcess(dnode)
-		#can be None if server was already started
 		if proc is not None:
 			procList.append(proc)
 
@@ -266,7 +248,6 @@ def stopClusterLocal():
 	for dnode in clusterDef.datanodesOnThisHost():
 		stopServer(dnode)
 
-	# probably is only going to be one
 	for locator in clusterDef.locatorsOnThisHost():
 		stopLocator(locator)
 		
@@ -289,7 +270,6 @@ def stopCluster():
 	os.environ['GEMFIRE'] = GEMFIRE
 	os.environ['JAVA_HOME'] = JAVA_HOME
 
-	# pick any locator and connect to it
 	success = False
 	for hkey in clusterDef.clusterDef['hosts']:
 		host = clusterDef.clusterDef['hosts'][hkey]
@@ -297,7 +277,7 @@ def stopCluster():
 			process = host['processes'][pkey]
 			if process['type'] == 'locator':
 				if not success:
-					bindAddress = clusterDef.locatorProperty(pkey,'bind-address', host = hkey)
+					bindAddress = 'localhost'
 					port = clusterDef.locatorProperty(pkey,'port', host = hkey)
 					GEMFIRE = clusterDef.locatorProperty(pkey,'gemfire', host = hkey)
 					rc = subprocess.call([GEMFIRE + "/bin/gfsh"
@@ -363,9 +343,6 @@ if __name__ == '__main__':
 	if not os.path.isfile(clusterDefFile):
 		sys.exit('could not find cluster definition file: ' + clusterDefFile)
 		
-	# copy the whole file to a temp file line by line doing env var
-	# substitutions along the way, then load the cluster defintion
-	# from the temp file
 	with open(clusterDefFile,'r') as f:
 		tfile = tempfile.NamedTemporaryFile(delete=False)
 		tfileName = tfile.name

@@ -2,8 +2,8 @@
 # Copyright (c) 2015-2016 Pivotal Software, Inc. All Rights Reserved.
 #
 
-HANDLED_PROPS=['gemfire','java-home','cluster-home', 'bind-address', 'port',
-               'jvm-options','server-bind-address', 'server-port', 'classpath'
+HANDLED_PROPS=['gemfire','java-home','cluster-home', 'port',
+               'jvm-options', 'server-port', 'classpath'
                , 'hostname-for-clients']
 
 

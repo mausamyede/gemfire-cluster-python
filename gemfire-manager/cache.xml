@@ -25,7 +25,7 @@
 	</disk-store>
 	<!--
 		read-serialized=true means that server side reads of pdx serialized data will return a PdxInstance
-	-->
+	
 	<pdx persistent="true" disk-store-name="pdx-disk-store" read-serialized="true">
 		<pdx-serializer>
 			<class-name>com.gemstone.gemfire.pdx.ReflectionBasedAutoSerializer</class-name>
@@ -33,9 +33,25 @@
 				<string>io.pivotal.pde.sample.*</string>
 			</parameter>
 		</pdx-serializer>
-	</pdx>
+	</pdx>-->
 
-	<region name="Event" refid="PARTITION_REDUNDANT_PERSISTENT_OVERFLOW">
+	<region name="R1" refid="PARTITION_PERSISTENT">
+		<region-attributes disk-store-name="default-disk-store"/>
+	</region>
+
+	<region name="R2" refid="PARTITION_PERSISTENT">
+		<region-attributes disk-store-name="default-disk-store"/>
+	</region>
+
+	<region name="R3" refid="REPLICATE_PERSISTENT">
+		<region-attributes disk-store-name="default-disk-store"/>
+	</region>
+
+	<region name="R4" refid="REPLICATE_PERSISTENT">
+		<region-attributes disk-store-name="default-disk-store"/>
+	</region>
+
+	<region name="R5" refid="REPLICATE_PERSISTENT">
 		<region-attributes disk-store-name="default-disk-store"/>
 	</region>
 	
