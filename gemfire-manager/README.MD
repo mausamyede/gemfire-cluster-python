@@ -28,6 +28,7 @@ you may do so by modifying the _cluster-home_ setting in _cluster.json_.
 ```
 Note that the member name is determined by its key in the _processes_ dictionary
 under each host.
+
 8. stop and start a member
 ```
     python cluster.py stop datanode1
